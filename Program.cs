@@ -23,7 +23,7 @@ builder.Services
         client.BaseAddress =
             new Uri(builder.Configuration["WeatherApi:BaseUrl"]!);
 
-        client.Timeout = TimeSpan.FromSeconds(1);
+        client.Timeout = TimeSpan.FromSeconds(2);
     })
     .AddPolicyHandler(
         Policy<HttpResponseMessage>

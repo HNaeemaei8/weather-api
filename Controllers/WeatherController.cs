@@ -9,22 +9,16 @@ public class WeatherController : ControllerBase
 {
     private readonly IWeatherService _weatherService;
 
-    public WeatherController(
-        IWeatherService weatherService)
+    public WeatherController(IWeatherService weatherService)
     {
         _weatherService = weatherService;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(
-      CancellationToken cancellationToken)
+    public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        var result =
-            await _weatherService.GetWeatherAsync(
-                cancellationToken);
+        var result =await _weatherService.GetWeatherAsync(cancellationToken);
 
-        return result is null
-            ? Ok(null)
-            : Content(result, "application/json");
+        return result is null? NoContent() : Content(result, "application/json");
     }
 }

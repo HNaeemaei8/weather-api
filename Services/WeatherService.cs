@@ -83,10 +83,12 @@ public class WeatherService : IWeatherService
 
             return freshData;
         }
-        catch
+        catch (Exception ex)
         {
-            return await GetCachedData(cancellationToken);
+            _logger.LogError(ex, "Failed to get fresh weather data.");
 
+            return await GetCachedData(cancellationToken);
+        }
     }
     private async Task<string?> GetCachedData(CancellationToken cancellationToken)
     {
