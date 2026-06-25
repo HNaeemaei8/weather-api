@@ -86,7 +86,7 @@ public class WeatherService : IWeatherService
         catch
         {
             return await GetCachedData(cancellationToken);
-        }
+
     }
     private async Task<string?> GetCachedData(CancellationToken cancellationToken)
     {
