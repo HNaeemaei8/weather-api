@@ -1,5 +1,8 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Polly;
+using Polly.Extensions.Http;
+using Polly.Timeout;
 using WeatherApi.Data;
 using WeatherApi.Infrastructure.HttpClients;
 using WeatherApi.Services;
@@ -17,21 +20,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
 builder.Services
     .AddHttpClient<IWeatherApiClient, WeatherApiClient>(client =>
     {
-        client.BaseAddress =
-            new Uri(builder.Configuration["WeatherApi:BaseUrl"]!);
-
-        client.Timeout = TimeSpan.FromSeconds(2);
+        client.BaseAddress = new Uri(builder.Configuration["WeatherApi:BaseUrl"]!);
     })
+    .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(4.8)))
     .AddPolicyHandler(
-        Policy<HttpResponseMessage>
-            .Handle<HttpRequestException>()
+        HttpPolicyExtensions
+            .HandleTransientHttpError()
             .Or<TaskCanceledException>()
-            .WaitAndRetryAsync(
-                3,
-                _ => TimeSpan.FromMilliseconds(100)));
+            .Or<TimeoutRejectedException>()
+            .WaitAndRetryAsync(2, _ => TimeSpan.FromMilliseconds(100))
+    );
 
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 
@@ -39,9 +41,11 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-app.UseSwagger();
-
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 

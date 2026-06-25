@@ -19,6 +19,6 @@ public class WeatherController : ControllerBase
     {
         var result =await _weatherService.GetWeatherAsync(cancellationToken);
 
-        return result is null? NoContent() : Content(result, "application/json");
+        return result is null? new JsonResult(null): Content(result, "application/json");
     }
 }
