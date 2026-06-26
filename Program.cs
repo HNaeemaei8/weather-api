@@ -33,7 +33,8 @@ builder.Services
             .Or<TaskCanceledException>()
             .Or<TimeoutRejectedException>()
             .WaitAndRetryAsync(2, _ => TimeSpan.FromMilliseconds(100))
-    );
+    )
+    .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(1.5))); ;
 
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 
