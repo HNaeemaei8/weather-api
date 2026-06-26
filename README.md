@@ -20,20 +20,28 @@ Polly (Resilience & Timeout Policies)
 Swagger / OpenAPI
 Health Checks
 Architecture & Design Principles
-1. API Architecture
-Based on the task requirements, the application uses traditional Controllers to expose REST endpoints.
+1. Architectural Choice: Pragmatic Layered Architecture
+The application uses a strictly separated Layered Architecture (Presentation, Business Logic, Data Access) organized via folders. While enterprise patterns like Clean Architecture or Onion Architecture (with separate csproj projects) are popular, they were intentionally avoided here to strictly adhere to the KISS principle requested in the task. For a single-endpoint microservice deployed to a constrained environment like a spaceship, adding unnecessary abstraction layers (Domain, Application, Infrastructure projects) would cause:
 
-2. 20-Year Autonomy (KISS Principle)
-To ensure the application runs for 20 years without filling up the spaceship's disk storage, the system does not store historical weather data or use complex hashing/duplicate-checking mechanisms. Instead, the database holds exactly one record. Every successful fetch updates this single record. This guarantees a constant database size and avoids CPU-heavy JSON parsing, adhering strictly to the KISS principle.
+Over-engineering: Adding complexity for a simple CRUD-like operation.
+Resource Overhead: Increasing deployment size and runtime memory allocation.
+Failure Points: More abstractions mean more places where things can go wrong over 20 years.
+Instead, Separation of Concerns (SoC) is fully maintained logically: Controllers handle HTTP, Services handle business logic/fallback, and Infrastructure handles external calls. This provides a clean codebase without the bulk of enterprise architecture.
 
-3. 5-Second Client Timeout & Noisy Environment
+2. API Architecture
+Based on the task requirements (*از minimal api استفاده نشود), the application uses traditional Controllers to expose REST endpoints.
+
+3. 20-Year Autonomy (KISS Principle)
+To ensure the application runs for 20 years without filling up the spaceship's disk storage, the system does not store historical weather data or use complex hashing/duplicate-checking mechanisms. Instead, the database holds exactly one record. Every successful fetch updates this single record. This guarantees a constant database size and avoids CPU-heavy JSON parsing.
+
+4. 5-Second Client Timeout & Noisy Environment
 The network to the weather service is noisy, and the client can wait a maximum of 5 seconds. Polly policies are configured to ensure the total request time stays under 5 seconds:
 
 Per-request Timeout: 1.5 seconds.
 Retry Policy: 2 retries with a 100ms delay (handles transient 5xx errors and network drops).
 Total Policy Timeout: 4.8 seconds (aborts further attempts and falls back to cache).
-4. Decoupled Error Handling
-Network errors (falling back to cache) and database errors (logging and returning fresh data) are handled in separate try-catch blocks to prevent application crashes during partial system failures.
+5. Decoupled Error Handling
+Network errors (falling back to cache) and database errors (logging and returning fresh data) are handled in separate try-catch blocks to prevent application crashes during partial system failures (Fault Tolerance).
 
 Features
 Weather Retrieval
